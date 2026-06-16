@@ -9,9 +9,26 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['lucide-react', 'sonner', 'recharts']
+        // Mengubah manualChunks dari bentuk objek menjadi fungsi agar kompatibel dengan Rollup di Vercel
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            // Mengelompokkan React & Router ke dalam chunk 'vendor'
+            if (
+              id.includes('react') || 
+              id.includes('react-dom') || 
+              id.includes('react-router-dom')
+            ) {
+              return 'vendor';
+            }
+            // Mengelompokkan library UI & Charts ke dalam chunk 'ui'
+            if (
+              id.includes('lucide-react') || 
+              id.includes('sonner') || 
+              id.includes('recharts')
+            ) {
+              return 'ui';
+            }
+          }
         }
       }
     }
