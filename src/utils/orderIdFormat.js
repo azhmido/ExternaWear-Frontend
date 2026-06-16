@@ -1,0 +1,1 @@
+export const formatOrderId = (id) => `EW-${String(id).padStart(6, '0')}`;
