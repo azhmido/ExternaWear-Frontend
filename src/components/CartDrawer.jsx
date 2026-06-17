@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, memo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -17,7 +17,7 @@ const STEPS = [
   { id: 3, label: 'Konfirmasi' },
 ];
 
-const CartDrawer = memo(({ isOpen, onClose }) => {
+const CartDrawer = ({ isOpen, onClose }) => {
   const { items, removeFromCart, updateQuantity, clearCart, totalPrice } = useCart();
   const { user }    = useAuth();
   const navigate    = useNavigate();
@@ -194,8 +194,8 @@ const CartDrawer = memo(({ isOpen, onClose }) => {
         />
       )}
 
-      {/* Drawer — relative agar modal konfirmasi bisa absolute di dalamnya */}
-      <div className={`relative fixed top-0 right-0 h-full w-full max-w-md bg-ivory z-50 shadow-2xl flex flex-col transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      {/* Drawer — fixed agar overlay penuh, modal konfirmasi absolute tetap berfungsi karena fixed jadi containing block */}
+      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-ivory z-50 shadow-2xl flex flex-col transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
 
         {/* ─── Modal Konfirmasi Tutup ─────────────────────────────────────── */}
         {showCloseConfirm && (
@@ -560,6 +560,6 @@ const CartDrawer = memo(({ isOpen, onClose }) => {
       </div>
     </>
   );
-});
+};
 
 export default CartDrawer;
