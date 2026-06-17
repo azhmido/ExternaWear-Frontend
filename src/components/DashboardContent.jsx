@@ -181,3 +181,5 @@ const DashboardContent = memo(({ stats }) => {
     </div>
   );
 });
+
+export default DashboardContent;
