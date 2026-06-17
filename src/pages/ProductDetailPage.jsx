@@ -67,12 +67,8 @@ const ProductDetailPage = () => {
   const maxQty   = selectedVariant?.stock ?? 0;
   const totalStock = product.variants?.reduce((s, v) => s + v.stock, 0) ?? 0;
 
-  // Tambah ke keranjang: panggil context CartContext.addToCart() sebanyak quantity
-  // Data flow: CartContext manage state items → localStorage → CartDrawer baca dari context
   const handleAddToCart = () => {
-    for (let i = 0; i < quantity; i++) {
-      addToCart(product, selectedSize);
-    }
+    addToCart(product, selectedSize, quantity);
   };
 
   return (
@@ -209,8 +205,8 @@ const ProductDetailPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {product.variants?.map((v, i) => (
-                      <tr key={i} className="border-b border-parchment last:border-0">
+                    {product.variants?.map(v => (
+                      <tr key={v.size} className="border-b border-parchment last:border-0">
                         <td className="py-3 px-4 font-medium text-ink">{v.size}</td>
                         <td className="py-3 px-4 text-espresso">{v.stock} pcs</td>
                         <td className="py-3 px-4">

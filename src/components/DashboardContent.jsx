@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, Area,
   XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
@@ -7,7 +8,7 @@ import { PAYMENT_METHODS } from '../utils/paymentMethods';
 
 const PIE_COLORS = ['#0D0B0A','#2C1810','#6B3A2A','#A67C5B','#E8D9C8'];
 
-const DashboardContent = ({ stats }) => {
+const DashboardContent = memo(({ stats }) => {
   const pieData = stats?.byStatus?.map(d => ({
     name: d.status === 'pending' ? 'Menunggu' :
           d.status === 'confirmed' ? 'Dikonfirmasi' :
@@ -179,6 +180,4 @@ const DashboardContent = ({ stats }) => {
       </div>
     </div>
   );
-};
-
-export default DashboardContent;
+});

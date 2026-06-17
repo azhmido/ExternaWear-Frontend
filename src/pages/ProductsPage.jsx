@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Package, SlidersHorizontal, Search, ShoppingCart, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -30,6 +30,7 @@ const ProductsPage = () => {
   const [categories, setCategories]                 = useState(FALLBACK_CATEGORIES);
   const [page, setPage]                             = useState(1);
   const [totalPages, setTotalPages]                 = useState(1);
+  const abortRef = useRef(null);
 
   //delay pencarian 350ms biar nggak fetch tiap huruf diketik
   useEffect(() => {
@@ -44,7 +45,7 @@ const ProductsPage = () => {
 
   //scroll ke atas tiap page/filter berubah
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }, [page, selectedCategory, debouncedSearch, sort, inStock]);
 
   //fetch daftar kategori dari API
@@ -56,6 +57,9 @@ const ProductsPage = () => {
 
   //fungsi fetchProducts dibungkus biar referensinya stabil
   const fetchProducts = useCallback(async (p) => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -66,7 +70,7 @@ const ProductsPage = () => {
       const pg = p ?? page;
       params.set('page', pg);
       params.set('limit', '12');
-      const res = await api.get(`/products?${params.toString()}`);
+      const res = await api.get(`/products?${params.toString()}`, { signal: controller.signal });
       setProducts(res.data.data || []);
       setTotalPages(res.data.totalPages || 1);
     } catch { setProducts([]); }
@@ -76,9 +80,10 @@ const ProductsPage = () => {
   //fetch produk tiap kali fungsi fetchProducts berubah
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
-  const handlePageChange = (p) => {
+  const handlePageChange = useCallback((p) => {
     setPage(p);
-  };
+    fetchProducts(p);
+  }, [fetchProducts]);
 
   //daftar filter aktif di-cache
   const activeFilters = useMemo(() => [
@@ -218,7 +223,7 @@ const ProductsPage = () => {
               const totalStock = product.variants?.reduce((s, v) => s + v.stock, 0) ?? 0;
               const stagger = `animate-fadeIn stagger-${Math.min(idx + 1, 6)}`;
               return (
-                <div key={product.id} className={`${stagger} bg-ivory rounded-2xl overflow-hidden border border-parchment hover:border-mahogany/40 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-espresso/10 transition-all duration-300 group flex flex-col`}>
+                <div key={product.id} className={`${stagger} bg-ivory rounded-2xl overflow-hidden border border-parchment hover:border-mahogany/40 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-espresso/10 transition-transform duration-300 shadow group flex flex-col`}>
                   <Link to={`/products/${product.id}`} className="relative overflow-hidden h-60 bg-parchment/30 block">
                     <img src={product.image_url} alt={product.name} loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -242,8 +247,8 @@ const ProductsPage = () => {
                       <p className="text-xs text-caramel">{totalStock} tersisa</p>
                     </div>
                     <div className="flex gap-1.5 mt-2 flex-wrap">
-                      {product.variants?.map((v, i) => (
-                        <span key={i} className={`text-xs px-2 py-0.5 rounded-full border ${v.stock === 0 ? 'text-parchment border-parchment line-through' : 'text-espresso border-parchment'}`}>
+                      {product.variants?.map(v => (
+                        <span key={v.size} className={`text-xs px-2 py-0.5 rounded-full border ${v.stock === 0 ? 'text-parchment border-parchment line-through' : 'text-espresso border-parchment'}`}>
                           {v.size}
                         </span>
                       ))}

@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import { Plus, Trash2, Pencil, X, Package, Users, ShoppingCart, TrendingUp, AlertTriangle, Tag } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -23,6 +23,13 @@ const SIZES        = ['XS','S','M','L','XL','XXL'];
 const STATUS_OPT   = ['pending','confirmed','shipped','delivered','cancelled'];
 const STATUS_LABEL = { pending:'Menunggu', confirmed:'Dikonfirmasi', shipped:'Dikirim', delivered:'Diterima', cancelled:'Dibatalkan' };
 const STATUS_COLOR = { pending:'bg-yellow-100 text-yellow-800', confirmed:'bg-blue-100 text-blue-800', shipped:'bg-purple-100 text-purple-800', delivered:'bg-green-100 text-green-800', cancelled:'bg-red-100 text-red-800' };
+const TABS = [
+  { key:'dashboard', label:'Dashboard' },
+  { key:'products',  label:'Produk' },
+  { key:'orders',    label:'Pesanan' },
+  { key:'shipping',  label:'Ongkir' },
+  { key:'categories', label:'Kategori' },
+];
 const defaultForm = {
   name:'', description:'', price:'',
   category: CATEGORIES[0], image_url:'',
@@ -54,18 +61,27 @@ const AdminPage = () => {
   const [productTotalPages, setProductTotalPages] = useState(1);
   const [orderPage, setOrderPage] = useState(1);
   const [orderTotalPages, setOrderTotalPages] = useState(1);
+  const abortRef = useRef(null);
 
-  //ambil semua data admin dalam 1 Promise.all
-  //5 endpoint API paralel ke semua state React ke UI tiap tab
-  const fetchData = (pp, op) => {
+  const statCards = useMemo(() => stats ? [
+    { label:'Total Produk',     value: stats.totalProducts, icon: Package,      bg:'bg-ink' },
+    { label:'Total Pelanggan',  value: stats.totalUsers,    icon: Users,        bg:'bg-mahogany' },
+    { label:'Total Pesanan',    value: stats.totalOrders,   icon: ShoppingCart, bg:'bg-espresso' },
+    { label:'Total Pendapatan', value: abbreviate(stats.totalRevenue), icon: TrendingUp, bg:'bg-caramel' },
+  ] : [], [stats]);
+
+  const fetchData = useCallback((pp, op) => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     const pg = pp ?? productPage;
     const og = op ?? orderPage;
     Promise.all([
-      api.get(`/products?page=${pg}&limit=20`).catch(() => ({ data: { data: [], totalPages: 1 } })),
-      api.get(`/orders?page=${og}&limit=20`).catch(() => ({ data: { data: [], totalPages: 1 } })),
-      api.get('/orders/stats').catch(() => ({ data: null })),
-      api.get('/shipping').catch(() => ({ data: [] })),
-      api.get('/categories').catch(() => ({ data: [] })),
+      api.get(`/products?page=${pg}&limit=20`, { signal: controller.signal }).catch(() => ({ data: { data: [], totalPages: 1 } })),
+      api.get(`/orders?page=${og}&limit=20`, { signal: controller.signal }).catch(() => ({ data: { data: [], totalPages: 1 } })),
+      api.get('/orders/stats', { signal: controller.signal }).catch(() => ({ data: null })),
+      api.get('/shipping', { signal: controller.signal }).catch(() => ({ data: [] })),
+      api.get('/categories', { signal: controller.signal }).catch(() => ({ data: [] })),
     ]).then(([pRes, oRes, sRes, shipRes, catRes]) => {
       setProducts(pRes.data.data || []);
       setProductTotalPages(pRes.data.totalPages || 1);
@@ -75,25 +91,25 @@ const AdminPage = () => {
       setShippingRates(shipRes.data);
       setCategories(catRes.data);
     });
-  };
+  }, [productPage, orderPage]);
 
   //fetch semua data pas pertama render
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   //scroll ke atas tiap ganti tab atau halaman
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }, [activeTab, productPage, orderPage]);
 
-  const handleProductPageChange = (p) => {
+  const handleProductPageChange = useCallback((p) => {
     setProductPage(p);
     fetchData(p, null);
-  };
+  }, [fetchData]);
 
-  const handleOrderPageChange = (p) => {
+  const handleOrderPageChange = useCallback((p) => {
     setOrderPage(p);
     fetchData(null, p);
-  };
+  }, [fetchData]);
 
   //update array dalam state
   const handleVariantChange = (i, field, value) => {
@@ -248,12 +264,7 @@ const AdminPage = () => {
         {/* Stat Cards */}
         {stats && (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {[
-              { label:'Total Produk',     value: stats.totalProducts, icon: Package,      bg:'bg-ink' },
-              { label:'Total Pelanggan',  value: stats.totalUsers,    icon: Users,        bg:'bg-mahogany' },
-              { label:'Total Pesanan',    value: stats.totalOrders,   icon: ShoppingCart, bg:'bg-espresso' },
-              { label:'Total Pendapatan', value: abbreviate(stats.totalRevenue), icon: TrendingUp, bg:'bg-caramel' },
-            ].map(({ label, value, icon: Icon, bg }) => (
+            {statCards.map(({ label, value, icon: Icon, bg }) => (
               <div key={label} className={`${bg} rounded-2xl p-4 sm:p-5 text-linen`}>
                 <Icon size={18} className="opacity-70 mb-2 sm:mb-3" />
                 <p className="font-display text-lg sm:text-2xl font-bold leading-tight break-words">{value}</p>
@@ -265,16 +276,10 @@ const AdminPage = () => {
 
         {/* Tabs */}
         <div className="flex gap-1 bg-parchment/40 p-1 rounded-xl overflow-x-auto scrollbar-thin w-full sm:w-fit">
-          {[
-            { key:'dashboard', label:'Dashboard' },
-            { key:'products',  label:`Produk (${products.length})` },
-            { key:'orders',    label:`Pesanan (${orders.length})` },
-            { key:'shipping',  label:`Ongkir (${shippingRates.length})` },
-            { key:'categories', label:`Kategori (${categories.length})` },
-          ].map(({ key, label }) => (
+          {TABS.map(({ key, label }) => (
             <button key={key} onClick={() => setActiveTab(key)}
               className={`px-3 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition ${activeTab === key ? 'bg-ink text-linen' : 'text-espresso hover:text-ink'}`}>
-              {label}
+              {label}{key === 'products' ? ` (${products.length})` : key === 'orders' ? ` (${orders.length})` : key === 'shipping' ? ` (${shippingRates.length})` : key === 'categories' ? ` (${categories.length})` : ''}
             </button>
           ))}
         </div>
@@ -339,7 +344,7 @@ const AdminPage = () => {
                     </div>
                     <div className="space-y-2.5">
                       {form.variants.map((v, i) => (
-                        <div key={i} className="flex gap-2 sm:gap-3 items-center bg-linen border border-parchment p-2.5 sm:p-3 rounded-xl">
+                        <div key={`${v.size}-${i}`} className="flex gap-2 sm:gap-3 items-center bg-linen border border-parchment p-2.5 sm:p-3 rounded-xl">
                           <select value={v.size} onChange={(e) => handleVariantChange(i,'size',e.target.value)}
                             className="bg-ivory border border-parchment rounded-lg px-2 sm:px-3 py-2 text-xs sm:text-sm text-ink focus:outline-none focus:ring-2 focus:ring-ink">
                             {SIZES.map(s => <option key={s}>{s}</option>)}
@@ -390,7 +395,7 @@ const AdminPage = () => {
                     {products.map((p) => {
                       const totalStock = p.variants?.reduce((s, v) => s + v.stock, 0) ?? 0;
                       return (
-                        <div key={p.id} className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl border border-parchment hover:border-mahogany/40 hover:bg-parchment/20 transition group">
+                        <div key={p.id} className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl border border-parchment hover:border-mahogany/40 hover:bg-parchment/20 transition-colors group">
                           <img src={p.image_url} alt={p.name} loading="lazy"
                             className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl border border-parchment flex-shrink-0 mt-0.5"
                             onError={(e) => { e.target.src='https://placehold.co/64x64/E8D9C8/6B3A2A?text=EW'; }} />
@@ -409,8 +414,8 @@ const AdminPage = () => {
                               <span className="text-xs sm:text-sm text-mahogany font-bold">Rp {Number(p.price).toLocaleString('id-ID')}</span>
                             </div>
                             <div className="flex gap-1 mt-1.5 flex-wrap">
-                              {p.variants?.map((v, i) => (
-                                <span key={i} className={`text-[10px] px-1.5 py-0.5 rounded-full border ${v.stock === 0 ? 'text-parchment border-parchment' : 'text-espresso border-parchment bg-linen'}`}>
+                              {p.variants?.map(v => (
+                                <span key={v.size} className={`text-[10px] px-1.5 py-0.5 rounded-full border ${v.stock === 0 ? 'text-parchment border-parchment' : 'text-espresso border-parchment bg-linen'}`}>
                                   {v.size}: {v.stock}
                                 </span>
                               ))}
@@ -660,7 +665,7 @@ const AdminPage = () => {
                       </div>
                       <div className="mt-3 space-y-1 border-t border-parchment pt-3">
                         {order.items?.map((item, i) => (
-                          <div key={i} className="flex justify-between text-sm">
+                          <div key={`${item.product_name}-${item.size}-${i}`} className="flex justify-between text-sm">
                             <span className="text-espresso">{item.product_name} <span className="text-caramel">· {item.size} ×{item.quantity}</span></span>
                             <span className="text-mahogany font-medium">Rp {(item.price * item.quantity).toLocaleString('id-ID')}</span>
                           </div>

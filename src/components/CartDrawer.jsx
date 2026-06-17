@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -17,7 +17,7 @@ const STEPS = [
   { id: 3, label: 'Konfirmasi' },
 ];
 
-const CartDrawer = ({ isOpen, onClose }) => {
+const CartDrawer = memo(({ isOpen, onClose }) => {
   const { items, removeFromCart, updateQuantity, clearCart, totalPrice } = useCart();
   const { user }    = useAuth();
   const navigate    = useNavigate();
@@ -35,26 +35,14 @@ const CartDrawer = ({ isOpen, onClose }) => {
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
   const [savingAddress, setSavingAddress]         = useState(false);
   const [shippingRates, setShippingRates]         = useState([]);
-  const [shippingCost, setShippingCost]           = useState(0);
   const [selectedPayment, setSelectedPayment]     = useState('transfer_bank');
 
   const LABEL_ICONS = { Rumah: Home, Kantor: Building2 };
 
-  // Fetch daftar ongkir saat masuk step pengiriman
-  useEffect(() => {
-    if (step !== 2) return;
-    let cancelled = false;
-    api.get('/shipping')
-      .then(res => { if (!cancelled) setShippingRates(res.data); })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, [step]);
-
-  // Hitung ulang ongkir tiap kota berubah
-  useEffect(() => {
+  const shippingCost = useMemo(() => {
     const city = delivery.city?.toLowerCase().trim();
     const rate = shippingRates.find(r => r.city.toLowerCase() === city);
-    setShippingCost(rate ? Number(rate.cost) : 50000);
+    return rate ? Number(rate.cost) : 50000;
   }, [delivery.city, shippingRates]);
 
   const isCityRegistered = delivery.city?.trim() && shippingRates.some(
@@ -72,20 +60,22 @@ const CartDrawer = ({ isOpen, onClose }) => {
     } catch { setAddresses([]); }
   };
 
-  // Fetch alamat user saat step 2
+  // Fetch ongkir & alamat paralel saat masuk step pengiriman
   useEffect(() => {
     if (step !== 2 || !user) return;
     let cancelled = false;
     setAddressesLoading(true);
-    api.get('/addresses')
-      .then(res => {
-        if (cancelled) return;
-        setAddresses(res.data);
-        const defaultAddr = res.data.find(a => a.is_default) || res.data[0];
-        if (defaultAddr) setSelectedAddressId(defaultAddr.id);
-      })
-      .catch(() => { if (!cancelled) setAddresses([]); })
-      .finally(() => { if (!cancelled) setAddressesLoading(false); });
+    Promise.all([
+      api.get('/shipping').catch(() => ({ data: [] })),
+      api.get('/addresses').catch(() => ({ data: [] })),
+    ]).then(([shipRes, addrRes]) => {
+      if (cancelled) return;
+      setShippingRates(shipRes.data);
+      setAddresses(addrRes.data);
+      const defaultAddr = addrRes.data.find(a => a.is_default) || addrRes.data[0];
+      if (defaultAddr) setSelectedAddressId(defaultAddr.id);
+      setAddressesLoading(false);
+    });
     return () => { cancelled = true; };
   }, [step, user]);
 
@@ -570,6 +560,6 @@ const CartDrawer = ({ isOpen, onClose }) => {
       </div>
     </>
   );
-};
+});
 
 export default CartDrawer;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -16,6 +16,13 @@ import { SkeletonOrderItem, SkeletonAddressItem } from '../components/Skeleton';
 import api from '../api/apiClient';
 import { confirmToast } from '../utils/confirmToast';
 import { PAYMENT_METHODS } from '../utils/paymentMethods';
+
+const PROFILE_TABS = [
+  { key:'orders',   label:'Pesanan' },
+  { key:'profile',  label:'Profil' },
+  { key:'addresses', label:'Alamat' },
+  { key:'settings', label:'Pengaturan' },
+];
 
 const STATUS_CFG = {
   pending:   { label:'Menunggu Konfirmasi', color:'bg-yellow-100 text-yellow-800', dot:'bg-yellow-500' },
@@ -37,6 +44,14 @@ const ProfilePage = () => {
   const [statusFilter, setStatusFilter]   = useState('all');
   const [orderPage, setOrderPage]         = useState(1);
   const [orderTotalPages, setOrderTotalPages] = useState(1);
+  const abortRef = useRef(null);
+
+  //cache hasil filter pesanan
+  const statusCounts = useMemo(() => {
+    const counts = {};
+    orders.forEach(o => { counts[o.status] = (counts[o.status] || 0) + 1; });
+    return counts;
+  }, [orders]);
 
   //edit username
   const [editingUsername, setEditingUsername] = useState(false);
@@ -145,29 +160,32 @@ const ProfilePage = () => {
   }, []);
 
   //ambil pesanan user dengan pagination
-  const fetchOrders = async (p) => {
+  const fetchOrders = useCallback(async (p) => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setLoadingOrders(true);
     try {
       const pg = p ?? orderPage;
-      const res = await api.get(`/orders/mine?page=${pg}&limit=10`);
+      const res = await api.get(`/orders/mine?page=${pg}&limit=10`, { signal: controller.signal });
       setOrders(res.data.data || []);
       setOrderTotalPages(res.data.totalPages || 1);
     } catch { setOrders([]); }
     finally { setLoadingOrders(false); }
-  };
+  }, [orderPage]);
 
   //fetch pesanan pas pertama render
-  useEffect(() => { fetchOrders(); }, []);
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
   //scroll ke atas tiap ganti tab atau halaman pesanan
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }, [activeTab, orderPage]);
 
-  const handleOrderPageChange = (p) => {
+  const handleOrderPageChange = useCallback((p) => {
     setOrderPage(p);
     fetchOrders(p);
-  };
+  }, [fetchOrders]);
 
   //konfirmasi dulu lalu patch status ke cancelled lalu update state biar UI langsung berubah
   const handleCancel = (orderId) => {
@@ -322,12 +340,7 @@ const ProfilePage = () => {
 
         {/* ─── Tabs ─── */}
         <div className="flex gap-1 bg-parchment/40 p-1 rounded-xl overflow-x-auto scrollbar-thin w-full sm:w-fit">
-          {[
-            { key:'orders',   label:'Pesanan' },
-            { key:'profile',  label:'Profil' },
-            { key:'addresses', label:'Alamat' },
-            { key:'settings', label:'Pengaturan' },
-          ].map(({ key, label }) => (
+          {PROFILE_TABS.map(({ key, label }) => (
             <button key={key} onClick={() => setActiveTab(key)}
               className={`px-3 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition ${activeTab === key ? 'bg-ink text-linen' : 'text-espresso hover:text-ink'}`}>
               {label}
@@ -345,7 +358,7 @@ const ProfilePage = () => {
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${statusFilter === s ? 'bg-ink text-linen' : 'bg-linen text-espresso border border-parchment hover:border-mahogany'}`}>
                   {s === 'all'
                     ? `Semua (${orders.length})`
-                    : `${STATUS_CFG[s]?.label} (${orders.filter(o => o.status === s).length})`}
+                    : `${STATUS_CFG[s]?.label} (${statusCounts[s] || 0})`}
                 </button>
               ))}
             </div>
@@ -430,7 +443,7 @@ const ProfilePage = () => {
                               {/* Daftar item */}
                               <div className="space-y-2">
                                 {order.items?.map((item, i) => (
-                                  <div key={i} className="flex justify-between items-center bg-linen rounded-xl px-4 py-3 text-sm">
+                                  <div key={`${item.product_name}-${item.size}-${i}`} className="flex justify-between items-center bg-linen rounded-xl px-4 py-3 text-sm">
                                     <div>
                                       <p className="font-medium text-ink">{item.product_name}</p>
                                       <p className="text-caramel text-xs">{item.size} · ×{item.quantity}</p>
