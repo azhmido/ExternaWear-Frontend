@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, ArrowLeft, MapPin, Phone, User, CheckCircle, Home, Building2, AlertTriangle } from 'lucide-react';
+import {
+  X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, ArrowLeft,
+  MapPin, Phone, User, CheckCircle, Home, Building2, AlertTriangle,
+} from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-
 import { confirmToast } from '../utils/confirmToast';
 import api from '../api/apiClient';
 
@@ -18,31 +20,35 @@ const CartDrawer = ({ isOpen, onClose }) => {
   const { items, removeFromCart, updateQuantity, clearCart, totalPrice } = useCart();
   const { user }    = useAuth();
   const navigate    = useNavigate();
-  const [step, setStep]     = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [delivery, setDelivery] = useState({
+
+  const [step, setStep]                         = useState(1);
+  const [loading, setLoading]                   = useState(false);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false); // ← modal konfirmasi tutup
+  const [delivery, setDelivery]                 = useState({
     name: user?.username || '', phone: '', address: '', city: '', postalCode: '',
   });
-  const [errors, setErrors] = useState({});
-  const [addresses, setAddresses]       = useState([]);
+  const [errors, setErrors]                     = useState({});
+  const [addresses, setAddresses]               = useState([]);
   const [addressesLoading, setAddressesLoading] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
-  const [savingAddress, setSavingAddress] = useState(false);
-  const [shippingRates, setShippingRates] = useState([]);
-  const [shippingCost, setShippingCost] = useState(0);
+  const [savingAddress, setSavingAddress]         = useState(false);
+  const [shippingRates, setShippingRates]         = useState([]);
+  const [shippingCost, setShippingCost]           = useState(0);
 
   const LABEL_ICONS = { Rumah: Home, Kantor: Building2 };
 
-  //fetch daftar ongkir dari API pas masuk step pengiriman
+  // Fetch daftar ongkir saat masuk step pengiriman
   useEffect(() => {
     if (step !== 2) return;
     let cancelled = false;
-    api.get('/shipping').then(res => { if (!cancelled) setShippingRates(res.data); }).catch(() => {});
+    api.get('/shipping')
+      .then(res => { if (!cancelled) setShippingRates(res.data); })
+      .catch(() => {});
     return () => { cancelled = true; };
   }, [step]);
 
-  //hitung ulang ongkir tiap kota berubah Rp 50.000 kalau kota nggak dikenal
+  // Hitung ulang ongkir tiap kota berubah
   useEffect(() => {
     const city = delivery.city?.toLowerCase().trim();
     const rate = shippingRates.find(r => r.city.toLowerCase() === city);
@@ -64,19 +70,20 @@ const CartDrawer = ({ isOpen, onClose }) => {
     } catch { setAddresses([]); }
   };
 
-  // useEffect: fetch alamat user pas step 2 — ambil dari API, pilih default otomatis
-  // Aliran data: DB (addresses) → Supabase → Backend API → axios → React state → UI
+  // Fetch alamat user saat step 2
   useEffect(() => {
     if (step !== 2 || !user) return;
     let cancelled = false;
     setAddressesLoading(true);
-    api.get('/addresses').then(res => {
-      if (cancelled) return;
-      setAddresses(res.data);
-      const defaultAddr = res.data.find(a => a.is_default) || res.data[0];
-      if (defaultAddr) setSelectedAddressId(defaultAddr.id);
-    }).catch(() => { if (!cancelled) setAddresses([]); })
-    .finally(() => { if (!cancelled) setAddressesLoading(false); });
+    api.get('/addresses')
+      .then(res => {
+        if (cancelled) return;
+        setAddresses(res.data);
+        const defaultAddr = res.data.find(a => a.is_default) || res.data[0];
+        if (defaultAddr) setSelectedAddressId(defaultAddr.id);
+      })
+      .catch(() => { if (!cancelled) setAddresses([]); })
+      .finally(() => { if (!cancelled) setAddressesLoading(false); });
     return () => { cancelled = true; };
   }, [step, user]);
 
@@ -103,14 +110,24 @@ const CartDrawer = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleClose = () => {
-    if (step > 1 && !window.confirm('Data pengiriman yang sudah diisi akan hilang. Lanjutkan?')) return;
+  // ─── Eksekusi reset & tutup yang sesungguhnya ─────────────────────────────
+  const performClose = () => {
+    setShowCloseConfirm(false);
     setStep(1);
     setErrors({});
     setShowNewAddressForm(false);
     setSelectedAddressId(null);
     setAddresses([]);
     onClose();
+  };
+
+  // ─── Tampilkan modal konfirmasi jika sudah di step 2+ ─────────────────────
+  const handleClose = () => {
+    if (step > 1) {
+      setShowCloseConfirm(true);
+      return;
+    }
+    performClose();
   };
 
   const validateDelivery = () => {
@@ -128,11 +145,8 @@ const CartDrawer = ({ isOpen, onClose }) => {
   const handleNext = () => {
     if (step === 1 && items.length === 0) { toast.error('Keranjang masih kosong!'); return; }
     if (step === 2) {
-      // If showing new address form, validate & save
       if (showNewAddressForm && !validateDelivery()) return;
-      // If no addresses and no form, validate delivery
       if (!showNewAddressForm && addresses.length === 0 && !validateDelivery()) return;
-      // If addresses exist and none selected, error
       if (addresses.length > 0 && !showNewAddressForm && !selectedAddressId) {
         toast.error('Pilih alamat pengiriman.');
         return;
@@ -141,8 +155,6 @@ const CartDrawer = ({ isOpen, onClose }) => {
     setStep(s => s + 1);
   };
 
-  //kirim data pesanan ke backend redirect ke Xendit
-  //redirect browser ke halaman Xendit
   const handleConfirm = async () => {
     if (!user) {
       toast.error('Silakan login terlebih dahulu!');
@@ -152,10 +164,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
     }
     setLoading(true);
     try {
-      const payload = {
-        items,
-        paymentMethod: 'transfer_bank',
-      };
+      const payload = { items, paymentMethod: 'transfer_bank' };
       if (selectedAddressId) {
         payload.addressId = selectedAddressId;
       } else {
@@ -163,7 +172,6 @@ const CartDrawer = ({ isOpen, onClose }) => {
       }
 
       const res = await api.post('/orders', payload);
-
       const { paymentUrl, isCod } = res.data;
 
       clearCart();
@@ -184,10 +192,56 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
   return (
     <>
-      {isOpen && <div className="fixed inset-0 bg-ink/60 z-40" onClick={handleClose} aria-label="Tutup keranjang" role="presentation" />}
+      {/* Overlay latar */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-ink/60 z-40"
+          onClick={handleClose}
+          aria-label="Tutup keranjang"
+          role="presentation"
+        />
+      )}
 
-      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-ivory z-50 shadow-2xl flex flex-col transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-        {/* Header */}
+      {/* Drawer — relative agar modal konfirmasi bisa absolute di dalamnya */}
+      <div className={`relative fixed top-0 right-0 h-full w-full max-w-md bg-ivory z-50 shadow-2xl flex flex-col transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+
+        {/* ─── Modal Konfirmasi Tutup ─────────────────────────────────────── */}
+        {showCloseConfirm && (
+          <div className="absolute inset-0 z-10 flex items-end justify-center p-5 bg-ink/50 backdrop-blur-sm">
+            <div className="bg-ivory rounded-3xl w-full p-6 space-y-5 shadow-2xl">
+              <div className="flex items-start gap-4">
+                <div className="bg-yellow-100 p-3 rounded-2xl flex-shrink-0">
+                  <AlertTriangle size={24} className="text-yellow-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-display text-xl font-bold text-ink leading-tight">
+                    Tutup Keranjang?
+                  </h3>
+                  <p className="text-caramel text-sm mt-1.5 leading-relaxed">
+                    Data pengiriman yang sudah Anda isi akan{' '}
+                    <span className="text-ink font-medium">hilang</span> dan tidak tersimpan.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowCloseConfirm(false)}
+                  className="flex-1 border border-parchment text-espresso hover:bg-parchment/40 py-3 rounded-xl text-sm font-medium transition active:scale-95"
+                >
+                  Lanjut Belanja
+                </button>
+                <button
+                  onClick={performClose}
+                  className="flex-1 bg-ink hover:bg-espresso active:scale-95 text-linen font-semibold py-3 rounded-xl text-sm transition"
+                >
+                  Ya, Tutup
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── Header ────────────────────────────────────────────────────── */}
         <div className="bg-ink px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between flex-shrink-0">
           <h2 className="font-display text-lg sm:text-xl font-semibold text-linen">Keranjang Belanja</h2>
           <button onClick={handleClose} aria-label="Tutup keranjang" className="text-caramel hover:text-linen transition p-1">
@@ -195,7 +249,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Step Indicator */}
+        {/* ─── Step Indicator ─────────────────────────────────────────────── */}
         <div className="flex items-center px-4 sm:px-6 py-3 sm:py-4 bg-espresso/5 border-b border-parchment flex-shrink-0">
           {STEPS.map((s, i) => (
             <div key={s.id} className="flex items-center flex-1 min-w-0">
@@ -212,7 +266,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
           ))}
         </div>
 
-        {/* Content */}
+        {/* ─── Content ────────────────────────────────────────────────────── */}
         <div className="flex-1 overflow-y-auto">
 
           {/* Step 1: Cart */}
@@ -253,7 +307,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
           {/* Step 2: Delivery Info */}
           {step === 2 && (
-              <div className="p-4 sm:p-5 space-y-4">
+            <div className="p-4 sm:p-5 space-y-4">
               <p className="text-xs sm:text-sm text-caramel">Pilih alamat pengiriman Anda.</p>
 
               {/* Loading */}
@@ -263,34 +317,25 @@ const CartDrawer = ({ isOpen, onClose }) => {
                 </div>
               )}
 
-              {/* Saved addresses list */}
+              {/* Daftar alamat tersimpan */}
               {!addressesLoading && addresses.length > 0 && !showNewAddressForm && (
                 <div className="space-y-3">
                   {addresses.map((addr) => {
                     const isSelected = selectedAddressId === addr.id;
                     const LabelIcon = LABEL_ICONS[addr.label] || MapPin;
                     return (
-                      <button
-                        key={addr.id}
-                        type="button"
+                      <button key={addr.id} type="button"
                         onClick={() => {
                           setSelectedAddressId(addr.id);
                           setDelivery({
-                            name: addr.name,
-                            phone: addr.phone,
-                            address: addr.address,
-                            city: addr.city,
-                            postalCode: addr.postal_code,
+                            name: addr.name, phone: addr.phone,
+                            address: addr.address, city: addr.city, postalCode: addr.postal_code,
                           });
                         }}
-                        className={`w-full text-left border rounded-2xl p-3 sm:p-4 transition ${
-                          isSelected ? 'border-ink bg-linen' : 'border-parchment hover:border-mahogany/40'
-                        }`}
+                        className={`w-full text-left border rounded-2xl p-3 sm:p-4 transition ${isSelected ? 'border-ink bg-linen' : 'border-parchment hover:border-mahogany/40'}`}
                       >
                         <div className="flex items-start gap-3">
-                          <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 ${
-                            isSelected ? 'border-ink' : 'border-parchment'
-                          }`}>
+                          <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 ${isSelected ? 'border-ink' : 'border-parchment'}`}>
                             {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-ink" />}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -310,26 +355,19 @@ const CartDrawer = ({ isOpen, onClose }) => {
                     );
                   })}
 
-                  {/* Tambah alamat baru */}
-                  <button
-                    type="button"
-                    onClick={() => setShowNewAddressForm(true)}
-                    className="w-full flex items-center justify-center gap-2 border border-dashed border-parchment text-caramel hover:text-ink hover:border-mahogany/40 py-3.5 rounded-2xl transition text-sm font-medium"
-                  >
+                  <button type="button" onClick={() => setShowNewAddressForm(true)}
+                    className="w-full flex items-center justify-center gap-2 border border-dashed border-parchment text-caramel hover:text-ink hover:border-mahogany/40 py-3.5 rounded-2xl transition text-sm font-medium">
                     <Plus size={16} /> Tambah Alamat Baru
                   </button>
                 </div>
               )}
 
-              {/* New address form (shown when: no addresses OR user clicked "Tambah Baru") */}
+              {/* Form alamat baru */}
               {(showNewAddressForm || addresses.length === 0) && !addressesLoading && (
                 <div className="space-y-4">
                   {addresses.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setShowNewAddressForm(false)}
-                      className="text-sm text-mahogany hover:text-ink transition flex items-center gap-1"
-                    >
+                    <button type="button" onClick={() => setShowNewAddressForm(false)}
+                      className="text-sm text-mahogany hover:text-ink transition flex items-center gap-1">
                       <ArrowLeft size={14} /> Kembali ke alamat tersimpan
                     </button>
                   )}
@@ -343,7 +381,8 @@ const CartDrawer = ({ isOpen, onClose }) => {
                           onClick={() => setDelivery(d => ({ ...d, addressLabel: l }))}
                           className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium border transition flex-1 sm:flex-none justify-center ${
                             (delivery.addressLabel || 'Rumah') === l
-                              ? 'border-ink bg-ink text-linen' : 'border-parchment text-espresso hover:border-mahogany/40'
+                              ? 'border-ink bg-ink text-linen'
+                              : 'border-parchment text-espresso hover:border-mahogany/40'
                           }`}>
                           {l === 'Rumah' ? <Home size={14} /> : l === 'Kantor' ? <Building2 size={14} /> : <MapPin size={14} />}
                           {l}
@@ -363,35 +402,35 @@ const CartDrawer = ({ isOpen, onClose }) => {
                       <label className="block text-sm font-medium text-espresso mb-1.5">{label}</label>
                       <div className="relative">
                         <Icon size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-caramel" />
-                        <input type={key === 'phone' ? 'tel' : type}
+                        <input
+                          type={key === 'phone' ? 'tel' : type}
                           inputMode={key === 'phone' ? 'numeric' : undefined}
-                          placeholder={placeholder} value={delivery[key]}
+                          placeholder={placeholder}
+                          value={delivery[key]}
                           onChange={(e) => {
                             const val = key === 'phone' ? e.target.value.replace(/\D/g, '') : e.target.value;
                             setDelivery(d => ({ ...d, [key]: val }));
                             setErrors(er => ({ ...er, [key]: '' }));
                           }}
-                          className={`w-full bg-linen border rounded-xl pl-10 pr-4 py-3 text-sm text-ink placeholder-caramel/50 focus:outline-none focus:ring-2 focus:ring-ink transition ${errors[key] ? 'border-red-400' : 'border-parchment'}`} />
+                          className={`w-full bg-linen border rounded-xl pl-10 pr-4 py-3 text-sm text-ink placeholder-caramel/50 focus:outline-none focus:ring-2 focus:ring-ink transition ${errors[key] ? 'border-red-400' : 'border-parchment'}`}
+                        />
                       </div>
                       {errors[key] && <p className="text-xs text-red-500 mt-1">{errors[key]}</p>}
                     </div>
                   ))}
 
-                  {/* Save button for new address */}
                   {addresses.length > 0 && (
                     <button onClick={handleSaveNewAddress} disabled={savingAddress}
                       className="w-full flex items-center justify-center gap-2 bg-mahogany hover:bg-espresso text-linen font-semibold py-3.5 rounded-xl transition disabled:opacity-60 text-sm">
-                      {savingAddress ? (
-                        <><span className="w-4 h-4 border-2 border-linen border-t-transparent rounded-full animate-spin" /> Menyimpan...</>
-                      ) : (
-                        <><CheckCircle size={16} /> Simpan & Gunakan Alamat Ini</>
-                      )}
+                      {savingAddress
+                        ? <><span className="w-4 h-4 border-2 border-linen border-t-transparent rounded-full animate-spin" /> Menyimpan...</>
+                        : <><CheckCircle size={16} /> Simpan & Gunakan Alamat Ini</>}
                     </button>
                   )}
                 </div>
               )}
 
-              {/* Shipping cost info */}
+              {/* Info ongkir */}
               {delivery.city && isCityRegistered && (
                 <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3 sm:p-4 flex items-center gap-3">
                   <div className="text-blue-600 font-bold text-lg">🚚</div>
@@ -413,17 +452,18 @@ const CartDrawer = ({ isOpen, onClose }) => {
                 <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-3 sm:p-4 flex items-center gap-3">
                   <span className="text-yellow-700 text-lg">🚚</span>
                   <p className="text-xs sm:text-sm text-yellow-800">
-                    Kota <span className="font-semibold">{delivery.city}</span> belum terdaftar. Ongkos kirim akan dihitung sebagai <span className="font-semibold">Luar Kota (Rp 50.000)</span>.
+                    Kota <span className="font-semibold">{delivery.city}</span> belum terdaftar. Ongkos kirim dihitung sebagai{' '}
+                    <span className="font-semibold">Luar Kota (Rp 50.000)</span>.
                   </p>
                 </div>
               )}
             </div>
           )}
 
-          {/* Step 3: Confirm */}
+          {/* Step 3: Konfirmasi */}
           {step === 3 && (
             <div className="p-4 sm:p-5 space-y-5">
-              {/* Delivery summary */}
+              {/* Ringkasan alamat */}
               <div className="bg-linen border border-parchment rounded-2xl p-4">
                 <p className="text-xs font-semibold text-espresso uppercase tracking-wide mb-3">Info Pengiriman</p>
                 <div className="space-y-1 text-sm">
@@ -433,7 +473,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              {/* Items summary */}
+              {/* Ringkasan item */}
               <div>
                 <p className="text-xs font-semibold text-espresso uppercase tracking-wide mb-3">Ringkasan Pesanan</p>
                 <div className="space-y-2">
@@ -474,7 +514,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
           )}
         </div>
 
-        {/* Footer */}
+        {/* ─── Footer ─────────────────────────────────────────────────────── */}
         <div className="border-t border-parchment p-4 sm:p-5 space-y-3 flex-shrink-0 bg-white">
           {step > 1 && (
             <button onClick={() => setStep(s => s - 1)}
@@ -490,7 +530,9 @@ const CartDrawer = ({ isOpen, onClose }) => {
           ) : (
             <button onClick={handleConfirm} disabled={loading}
               className="w-full flex items-center justify-center gap-2 bg-ink hover:bg-espresso active:scale-95 text-linen font-semibold py-3.5 rounded-xl transition disabled:opacity-60">
-              {loading ? <><span className="w-4 h-4 border-2 border-linen border-t-transparent rounded-full animate-spin" />Memproses...</> : <><CheckCircle size={18} /> Konfirmasi Pesanan</>}
+              {loading
+                ? <><span className="w-4 h-4 border-2 border-linen border-t-transparent rounded-full animate-spin" /> Memproses...</>
+                : <><CheckCircle size={18} /> Konfirmasi Pesanan</>}
             </button>
           )}
         </div>
