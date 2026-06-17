@@ -8,6 +8,7 @@ import {
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { confirmToast } from '../utils/confirmToast';
+import { PAYMENT_METHOD_LIST } from '../utils/paymentMethods';
 import api from '../api/apiClient';
 
 const STEPS = [
@@ -35,6 +36,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
   const [savingAddress, setSavingAddress]         = useState(false);
   const [shippingRates, setShippingRates]         = useState([]);
   const [shippingCost, setShippingCost]           = useState(0);
+  const [selectedPayment, setSelectedPayment]     = useState('transfer_bank');
 
   const LABEL_ICONS = { Rumah: Home, Kantor: Building2 };
 
@@ -164,7 +166,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
     }
     setLoading(true);
     try {
-      const payload = { items, paymentMethod: 'transfer_bank' };
+      const payload = { items, paymentMethod: selectedPayment };
       if (selectedAddressId) {
         payload.addressId = selectedAddressId;
       } else {
@@ -485,6 +487,35 @@ const CartDrawer = ({ isOpen, onClose }) => {
                       <span className="font-medium text-ink">Rp {(item.price * item.quantity).toLocaleString('id-ID')}</span>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Metode Pembayaran */}
+              <div>
+                <p className="text-xs font-semibold text-espresso uppercase tracking-wide mb-3">Metode Pembayaran</p>
+                <div className="space-y-2">
+                  {PAYMENT_METHOD_LIST.map(pm => {
+                    const isSelected = selectedPayment === pm.value;
+                    const Icon = pm.icon;
+                    return (
+                      <button key={pm.value} type="button" onClick={() => setSelectedPayment(pm.value)}
+                        className={`w-full flex items-center gap-3 border rounded-2xl p-3 text-left transition ${
+                          isSelected ? 'border-ink bg-linen' : 'border-parchment hover:border-mahogany/40'
+                        }`}
+                      >
+                        <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-ink' : 'border-parchment'}`}>
+                          {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-ink" />}
+                        </div>
+                        <div className="p-1.5 rounded-lg flex-shrink-0" style={{ backgroundColor: `${pm.color}1A` }}>
+                          <Icon size={16} style={{ color: pm.color }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-ink">{pm.label}</p>
+                          <p className="text-xs text-caramel">{pm.desc}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
