@@ -60,7 +60,7 @@ Frontend aplikasi e-commerce **ExternaWear**, platform pemesanan pakaian pria mo
 externawear-frontend/
 ├── public/
 ├── src/
-|   ├── api/
+│   ├── api/
 │   ├── assets/
 │   ├── components/
 │   ├── context/
