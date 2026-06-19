@@ -101,7 +101,7 @@ const ProductsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-linen animate-fadeIn">
+    <div className="min-h-screen bg-linen">
       <Navbar />
 
       {/* Hero */}
