@@ -60,16 +60,23 @@ Frontend aplikasi e-commerce **ExternaWear**, platform pemesanan pakaian pria mo
 externawear-frontend/
 ├── public/
 ├── src/
+|   ├── api/
 │   ├── assets/
 │   ├── components/
-│   ├── pages/
-│   ├── routes/
-│   ├── services/
-│   ├── hooks/
 │   ├── context/
-│   └── App.jsx
-├── .env.example
+│   ├── hooks/
+│   ├── pages/
+│   ├── utils/
+│   ├── App.jsx
+│   └── index.css
+├── .env
+├── gitignore
+├── eslint.config.js
+├── index.html
 ├── package.json
+├── pnpm-lock.yaml
+├── README.md
+├── vercel.json
 └── vite.config.js
 ```
 
