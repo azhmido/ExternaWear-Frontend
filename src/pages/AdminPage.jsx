@@ -3,11 +3,13 @@ import { toast } from 'sonner';
 import { Plus, Trash2, Pencil, X, Package, Users, ShoppingCart, TrendingUp, AlertTriangle, Tag } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import BackToTop from '../components/BackToTop';
 import api from '../api/apiClient';
 import { confirmToast } from '../utils/confirmToast';
 import Pagination from '../components/Pagination';
 import { PAYMENT_METHODS } from '../utils/paymentMethods';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const DashboardContent = lazy(() => import('../components/DashboardContent'));
 
@@ -45,6 +47,7 @@ const AdminPage = () => {
   const [editId, setEditId]     = useState(null);
   const [loading, setLoading]   = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
+  useDocumentTitle('Dashboard');
 
   const [shippingRates, setShippingRates] = useState([]);
   const [rateForm, setRateForm] = useState({ city: '', cost: '', estimated_days: '3-5 hari' });
@@ -686,6 +689,7 @@ const AdminPage = () => {
 
       </div>
       <BackToTop />
+      <Footer />
     </div>
   );
 };

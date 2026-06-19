@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { ShoppingBag, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/apiClient';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const LoginPage = () => {
   const { user, loading, login } = useAuth();
@@ -11,6 +12,7 @@ const LoginPage = () => {
   const [form, setForm]               = useState({ username: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting]   = useState(false);
+  useDocumentTitle('Masuk');
 
   if (loading) return (
     <div className="min-h-screen bg-linen flex items-center justify-center">
@@ -37,7 +39,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-linen flex">
+    <div className="min-h-screen bg-linen flex animate-fadeIn">
 
       {/* ─── Panel kiri ─── */}
       <div className="hidden lg:flex lg:w-1/2 bg-ink flex-col justify-between p-12">

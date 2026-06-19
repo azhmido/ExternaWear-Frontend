@@ -4,7 +4,9 @@ import { ShoppingBag, ArrowLeft, Package, Minus, Plus, ChevronRight } from 'luci
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { SkeletonProductDetail } from '../components/Skeleton';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 import api from '../api/apiClient';
 
 const TAB_INFO = [
@@ -23,6 +25,12 @@ const ProductDetailPage = () => {
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity]     = useState(1);
   const [activeTab, setActiveTab]   = useState('desc');
+  useDocumentTitle(product?.name || 'Produk');
+
+  //scroll ke atas tiap ganti produk
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [id]);
 
   //fetch detail produk
   useEffect(() => {
@@ -49,14 +57,14 @@ const ProductDetailPage = () => {
   }, [id]);
 
   if (loading) return (
-    <div className="min-h-screen bg-linen">
+    <div className="min-h-screen bg-linen animate-fadeIn">
       <Navbar />
       <SkeletonProductDetail />
     </div>
   );
 
   if (!product) return (
-    <div className="min-h-screen bg-linen flex flex-col items-center justify-center gap-4">
+    <div className="min-h-screen bg-linen animate-fadeIn flex flex-col items-center justify-center gap-4">
       <Package size={52} className="text-parchment" />
       <p className="text-espresso font-medium">Produk tidak ditemukan.</p>
       <Link to="/" className="text-sm text-mahogany hover:text-ink transition">← Kembali ke Katalog</Link>
@@ -72,7 +80,7 @@ const ProductDetailPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-linen">
+    <div className="min-h-screen bg-linen animate-fadeIn">
       <Navbar />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
@@ -264,6 +272,7 @@ const ProductDetailPage = () => {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 };

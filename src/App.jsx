@@ -6,9 +6,11 @@ import ProductsPage        from './pages/ProductsPage';
 const LoginPage         = lazy(() => import('./pages/LoginPage'));
 const RegisterPage      = lazy(() => import('./pages/RegisterPage'));
 const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
+const AboutPage         = lazy(() => import('./pages/AboutPage'));
 const ProfilePage       = lazy(() => import('./pages/ProfilePage'));
 const AdminPage         = lazy(() => import('./pages/AdminPage'));
 const PaymentStatusPage = lazy(() => import('./pages/PaymentStatusPage'));
+const NotFoundPage      = lazy(() => import('./pages/NotFoundPage'));
 
 const Fallback = () => (
   <div className="min-h-screen bg-linen flex items-center justify-center">
@@ -21,6 +23,7 @@ const App = () => (
     <Routes>
       <Route path="/"              element={<ProductsPage />} />
       <Route path="/products/:id"  element={<ProductDetailPage />} />
+      <Route path="/tentang"       element={<AboutPage />} />
       <Route path="/login"         element={<LoginPage />} />
       <Route path="/register"      element={<RegisterPage />} />
 
@@ -46,6 +49,7 @@ const App = () => (
           <AdminPage />
         </ProtectedRoute>
       } />
+      <Route path="*"      element={<NotFoundPage />} />
     </Routes>
   </Suspense>
 );

@@ -10,12 +10,14 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import Pagination from '../components/Pagination';
 import FocusTrap from '../components/FocusTrap';
 import { SkeletonOrderItem, SkeletonAddressItem } from '../components/Skeleton';
 import api from '../api/apiClient';
 import { confirmToast } from '../utils/confirmToast';
 import { PAYMENT_METHODS } from '../utils/paymentMethods';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const PROFILE_TABS = [
   { key:'orders',   label:'Pesanan' },
@@ -36,6 +38,7 @@ const ProfilePage = () => {
   const { user, checkAuth } = useAuth();
   const { clearCart }       = useCart();
   const navigate             = useNavigate();
+  useDocumentTitle('Profil');
 
   const [activeTab, setActiveTab]         = useState('orders');
   const [orders, setOrders]               = useState([]);
@@ -932,6 +935,7 @@ const ProfilePage = () => {
           </div></FocusTrap>
         </div>
       )}
+      <Footer />
     </div>
   );
 };

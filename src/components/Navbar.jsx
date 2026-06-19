@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   ShoppingBag, LogOut, ShoppingCart,
-  LayoutGrid, User, Menu, X, LayoutDashboard,
+  LayoutGrid, User, Menu, X, LayoutDashboard, Info,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -59,6 +59,9 @@ const Navbar = memo(() => {
             <div className="hidden lg:flex items-center gap-1">
               <Link to="/" className={navLinkClass('/')}>
                 <LayoutGrid size={15} /> Katalog
+              </Link>
+              <Link to="/tentang" className={navLinkClass('/tentang')}>
+                <Info size={15} /> Tentang
               </Link>
               {user?.role === 'user' && (
                 <Link to="/profile" className={navLinkClass('/profile')}>
@@ -137,6 +140,9 @@ const Navbar = memo(() => {
               <div className="pb-4 pt-3 space-y-1 border-t border-parchment/15">
                 <Link to="/" onClick={closeMenu} className={navLinkClass('/', 'w-full')}>
                   <LayoutGrid size={15} /> Katalog
+                </Link>
+                <Link to="/tentang" onClick={closeMenu} className={navLinkClass('/tentang', 'w-full')}>
+                  <Info size={15} /> Tentang
                 </Link>
                 {user.role === 'user' && (
                   <Link to="/profile" onClick={closeMenu} className={navLinkClass('/profile', 'w-full')}>

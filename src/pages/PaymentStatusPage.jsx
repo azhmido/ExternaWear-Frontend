@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/apiClient';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const STATUS_TYPE = {
   success: {
@@ -34,6 +35,7 @@ const PaymentStatusPage = ({ type = 'success' }) => {
   const orderId                 = searchParams.get('order_id');
   const cfg                     = STATUS_TYPE[type];
   const Icon                    = cfg.icon;
+  useDocumentTitle(type === 'success' ? 'Pembayaran Berhasil' : 'Pembayaran Gagal');
 
   const fetchAttempt = useRef(0);
 
@@ -84,14 +86,14 @@ const PaymentStatusPage = ({ type = 'success' }) => {
   }, [orderId, user, type]);
 
   if (loading) return (
-    <div className="min-h-screen bg-linen flex flex-col items-center justify-center gap-4">
+    <div className="min-h-screen bg-linen flex flex-col items-center justify-center gap-4 animate-fadeIn">
       <div className="w-12 h-12 border-4 border-ink border-t-transparent rounded-full animate-spin" />
       <p className="text-caramel text-sm">Memverifikasi pembayaran...</p>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-linen flex items-center justify-center p-6">
+    <div className="min-h-screen bg-linen flex items-center justify-center p-6 animate-fadeIn">
       <div className="w-full max-w-md space-y-4">
 
         {/* Status Card */}

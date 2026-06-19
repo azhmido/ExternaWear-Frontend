@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import Pagination from '../components/Pagination';
 import BackToTop from '../components/BackToTop';
+import Footer from '../components/Footer';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 import { SkeletonCard } from '../components/Skeleton';
 import api from '../api/apiClient';
 
@@ -31,6 +33,7 @@ const ProductsPage = () => {
   const [page, setPage]                             = useState(1);
   const [totalPages, setTotalPages]                 = useState(1);
   const abortRef = useRef(null);
+  useDocumentTitle('Katalog');
 
   //delay pencarian 350ms biar nggak fetch tiap huruf diketik
   useEffect(() => {
@@ -98,11 +101,11 @@ const ProductsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-linen">
+    <div className="min-h-screen bg-linen animate-fadeIn">
       <Navbar />
 
       {/* Hero */}
-      <div className="bg-ivory border-b border-parchment">
+      <div className="bg-ivory border-b border-parchment hero-pattern">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-14 flex items-end justify-between gap-8">
           <div>
             <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-bold text-ink leading-none">
@@ -274,13 +277,7 @@ const ProductsPage = () => {
         <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
       </div>
       <BackToTop />
-
-      <footer className="bg-ink py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span className="font-display text-xl font-bold text-linen">ExternaWear</span>
-          <p className="text-parchment/30 text-sm">© 2026 ExternaWear</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

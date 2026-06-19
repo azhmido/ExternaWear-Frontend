@@ -65,3 +65,8 @@ body {
 .scrollbar-thin::-webkit-scrollbar { width: 4px; }
 .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
 .scrollbar-thin::-webkit-scrollbar-thumb { background: #E8D9C8; border-radius: 8px; }
+
+.hero-pattern {
+  background-image: radial-gradient(circle at 1px 1px, rgba(107,58,42,0.06) 1px, transparent 0);
+  background-size: 24px 24px;
+}
