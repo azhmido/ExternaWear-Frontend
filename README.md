@@ -45,10 +45,10 @@ Frontend aplikasi e-commerce **ExternaWear**, platform pemesanan pakaian pria mo
 
 | Teknologi        | Versi | Keterangan                                             |
 | ---------------- | ----- | ------------------------------------------------------ |
-| React            | 18.x  | Library utama untuk membangun UI                       |
-| Vite             | 5.x   | Build tool modern dan cepat                            |
-| React Router DOM | 6.x   | Routing Single Page Application (SPA)                  |
-| Tailwind CSS     | 3.x   | Utility-first CSS Framework                            |
+| React            | 19.x  | Library utama untuk membangun UI                       |
+| Vite             | 8.x   | Build tool modern dan cepat                            |
+| React Router DOM | 7.x   | Routing Single Page Application (SPA)                  |
+| Tailwind CSS     | 4.x   | Utility-first CSS Framework                            |
 | Axios            | 1.x   | HTTP Client dengan konfigurasi `withCredentials: true` |
 | pnpm             | 9.x   | Package Manager                                        |
 
