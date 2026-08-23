@@ -228,7 +228,7 @@ const ProductsPage = () => {
               return (
                 <div key={product.id} className={`${stagger} bg-ivory rounded-2xl overflow-hidden border border-parchment hover:border-mahogany/40 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-espresso/10 transition-transform duration-300 shadow group flex flex-col`}>
                   <Link to={`/products/${product.id}`} className="relative overflow-hidden h-60 bg-parchment/30 block">
-                    <img src={product.image_url} alt={product.name} loading="lazy"
+                    <img src={product.image_url} alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       onError={(e) => { e.target.src = 'https://placehold.co/400x300/E8D9C8/6B3A2A?text=ExternaWear'; }} />
                     <div className="absolute top-3 left-3">

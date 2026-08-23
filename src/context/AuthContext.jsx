@@ -8,11 +8,16 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const checkAuth = useCallback(async () => {
+    if (localStorage.getItem('isLoggedIn') !== 'true') {
+      setLoading(false);
+      return;
+    }
     try {
       const res = await api.get('/users/me');
       setUser(res.data.user);
     } catch {
       setUser(null);
+      localStorage.removeItem('isLoggedIn');
     } finally {
       setLoading(false);
     }
@@ -34,11 +39,13 @@ export const AuthProvider = ({ children }) => {
   const login = useCallback(async (username, password) => {
     const res = await api.post('/users/login', { username, password });
     setUser(res.data.user);
+    localStorage.setItem('isLoggedIn', 'true');
     return res.data.user;
   }, []);
 
   const logout = useCallback(async () => {
     setUser(null);
+    localStorage.removeItem('isLoggedIn');
     try {
       await api.post('/users/logout');
     } catch {

@@ -99,7 +99,7 @@ const ProductDetailPage = () => {
             <div className="bg-parchment/20 rounded-3xl overflow-hidden aspect-square border border-parchment">
               <img
                 src={product.image_url}
-                alt={product.name} loading="lazy"
+                alt={product.name}
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                 onError={(e) => { e.target.src = 'https://placehold.co/600x600/E8D9C8/6B3A2A?text=ExternaWear'; }}
               />
