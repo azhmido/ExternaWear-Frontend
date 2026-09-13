@@ -3,7 +3,8 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, Area,
   XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
-import { Package, AlertTriangle, TrendingUp } from 'lucide-react';
+import EmptyState from './EmptyState';
+import { Package, AlertTriangle, TrendingUp, Inbox, FileText, CreditCard } from 'lucide-react';
 import { PAYMENT_METHODS } from '../utils/paymentMethods';
 
 const PIE_COLORS = ['#0D0B0A','#2C1810','#6B3A2A','#A67C5B','#E8D9C8'];
@@ -57,7 +58,7 @@ const DashboardContent = memo(({ stats }) => {
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-48 flex items-center justify-center text-caramel text-sm">Belum ada data.</div>
+            <EmptyState title="Pendapatan Kosong" message="Belum ada transaksi dalam 7 hari terakhir." icon={TrendingUp} />
           )}
         </div>
 
@@ -78,7 +79,7 @@ const DashboardContent = memo(({ stats }) => {
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-48 flex items-center justify-center text-caramel text-sm">Belum ada data.</div>
+            <EmptyState title="Pesanan Kosong" message="Belum ada data pesanan sama sekali." icon={FileText} />
           )}
         </div>
       </div>
@@ -100,7 +101,7 @@ const DashboardContent = memo(({ stats }) => {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-48 flex items-center justify-center text-caramel text-sm">Belum ada data penjualan.</div>
+            <EmptyState title="Belum Ada Penjualan" message="Data produk terlaris akan muncul setelah ada pesanan." icon={Inbox} />
           )}
         </div>
 
@@ -175,7 +176,7 @@ const DashboardContent = memo(({ stats }) => {
             </div>
           </div>
         ) : (
-          <div className="h-32 flex items-center justify-center text-caramel text-sm">Belum ada data pembayaran.</div>
+          <EmptyState title="Belum Ada Pembayaran" message="Data metode pembayaran akan muncul di sini." icon={CreditCard} />
         )}
       </div>
     </div>

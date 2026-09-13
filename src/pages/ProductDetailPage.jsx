@@ -8,6 +8,7 @@ import Footer from '../components/Footer';
 import { SkeletonProductDetail } from '../components/Skeleton';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import api from '../api/apiClient';
+import EmptyState from '../components/EmptyState';
 
 const TAB_INFO = [
   { key:'desc',  label:'Deskripsi' },
@@ -64,10 +65,14 @@ const ProductDetailPage = () => {
   );
 
   if (!product) return (
-    <div className="min-h-screen bg-linen animate-fadeIn flex flex-col items-center justify-center gap-4">
-      <Package size={52} className="text-parchment" />
-      <p className="text-espresso font-medium">Produk tidak ditemukan.</p>
-      <Link to="/" className="text-sm text-mahogany hover:text-ink transition">← Kembali ke Katalog</Link>
+    <div className="min-h-screen bg-linen animate-fadeIn flex flex-col items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        <EmptyState 
+          title="Produk Tidak Ditemukan" 
+          message="Maaf, produk yang Anda cari mungkin sudah dihapus atau tidak tersedia."
+          action={<Link to="/" className="inline-block mt-2 px-6 py-2.5 bg-ink text-linen text-sm font-semibold rounded-xl hover:bg-espresso transition">← Kembali ke Katalog</Link>}
+        />
+      </div>
     </div>
   );
 
@@ -106,7 +111,7 @@ const ProductDetailPage = () => {
                     e.target.dataset.retried = '1';
                     setTimeout(() => { e.target.src = product.image_url + '?' + Date.now(); }, 1500);
                   } else {
-                    e.target.src = 'https://placehold.co/600x600/E8D9C8/6B3A2A?text=ExternaWear';
+                    e.target.src = `data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' fill='%23E8D9C8'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='24' font-weight='bold' fill='%236B3A2A' text-anchor='middle' dy='.3em'%3EExternaWear%3C/text%3E%3C/svg%3E`;
                   }
                 }}
               />
@@ -276,7 +281,7 @@ const ProductDetailPage = () => {
                           e.target.dataset.retried = '1';
                           setTimeout(() => { e.target.src = p.image_url + '?' + Date.now(); }, 1500);
                         } else {
-                          e.target.src = 'https://placehold.co/200x160/E8D9C8/6B3A2A?text=EW';
+                          e.target.src = `data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='160' viewBox='0 0 200 160'%3E%3Crect width='200' height='160' fill='%23E8D9C8'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='14' font-weight='bold' fill='%236B3A2A' text-anchor='middle' dy='.3em'%3EEW%3C/text%3E%3C/svg%3E`;
                         }
                       }} />
                   </div>

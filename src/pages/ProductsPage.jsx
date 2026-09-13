@@ -9,6 +9,7 @@ import Footer from '../components/Footer';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { SkeletonCard } from '../components/Skeleton';
 import api from '../api/apiClient';
+import EmptyState from '../components/EmptyState';
 
 const FALLBACK_CATEGORIES = ['Semua','Jaket Coach','Jaket Bomber','Hoodie','Sweater','Jaket Denim','Vest'];
 const SORT_OPTIONS = [
@@ -215,10 +216,13 @@ const ProductsPage = () => {
             {[1,2,3,4,5,6].map(i => <SkeletonCard key={i} />)}
           </div>
         ) : products.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-3">
-            <Package size={52} className="text-parchment" />
-            <p className="text-espresso font-medium">Produk tidak ditemukan.</p>
-            <button onClick={clearAllFilters} className="text-sm text-mahogany hover:text-ink transition">Hapus semua filter</button>
+          <div className="col-span-full py-10">
+            <EmptyState 
+              title="Tidak ada produk" 
+              message="Maaf, kami tidak dapat menemukan produk yang cocok dengan pencarian atau filter Anda." 
+              icon={Search}
+              action={<button onClick={clearAllFilters} className="px-6 py-2.5 bg-ink text-linen rounded-xl text-sm font-semibold hover:bg-espresso transition">Hapus Semua Filter</button>}
+            />
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-16">
@@ -235,7 +239,7 @@ const ProductsPage = () => {
                           e.target.dataset.retried = '1';
                           setTimeout(() => { e.target.src = product.image_url + '?' + Date.now(); }, 1500);
                         } else {
-                          e.target.src = 'https://placehold.co/400x300/E8D9C8/6B3A2A?text=ExternaWear'; 
+                          e.target.src = `data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23E8D9C8'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='20' font-weight='bold' fill='%236B3A2A' text-anchor='middle' dy='.3em'%3EEW%3C/text%3E%3C/svg%3E`;
                         }
                       }} />
                     <div className="absolute top-3 left-3">

@@ -401,7 +401,7 @@ const AdminPage = () => {
                         <div key={p.id} className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl border border-parchment hover:border-mahogany/40 hover:bg-parchment/20 transition-colors group">
                           <img src={p.image_url} alt={p.name} loading="lazy"
                             className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl border border-parchment flex-shrink-0 mt-0.5"
-                            onError={(e) => { e.target.src='https://placehold.co/64x64/E8D9C8/6B3A2A?text=EW'; }} />
+                            onError={(e) => { e.target.src=`data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23E8D9C8'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='12' font-weight='bold' fill='%236B3A2A' text-anchor='middle' dy='.3em'%3EEW%3C/text%3E%3C/svg%3E`; }} />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <p className="font-semibold text-ink text-sm sm:text-base truncate">{p.name}</p>

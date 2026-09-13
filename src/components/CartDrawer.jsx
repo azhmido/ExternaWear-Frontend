@@ -275,7 +275,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                   <div key={`${item.product_id}-${item.size}`} className="flex gap-3 sm:gap-4 bg-linen rounded-2xl p-3 sm:p-4 border border-parchment">
                     <img src={item.image_url} alt={item.product_name} loading="lazy"
                       className="w-16 h-16 sm:w-[72px] sm:h-[72px] object-cover rounded-xl flex-shrink-0"
-                      onError={(e) => { e.target.src = 'https://placehold.co/72x72/E8D9C8/6B3A2A?text=EW'; }} />
+                      onError={(e) => { e.target.src = `data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'%3E%3Crect width='72' height='72' fill='%23E8D9C8'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='12' font-weight='bold' fill='%236B3A2A' text-anchor='middle' dy='.3em'%3EEW%3C/text%3E%3C/svg%3E`; }} />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-ink text-xs sm:text-sm truncate">{item.product_name}</p>
                       <p className="text-[11px] sm:text-xs text-caramel">Ukuran: <span className="font-medium text-espresso">{item.size}</span></p>
