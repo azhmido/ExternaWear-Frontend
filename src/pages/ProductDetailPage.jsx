@@ -176,7 +176,11 @@ const ProductDetailPage = () => {
                 <ShoppingBag size={20} />
                 {maxQty === 0 ? 'Stok Habis' : `Tambah ${quantity > 1 ? `(${quantity}) ` : ''}ke Keranjang`}
               </button>
-            ) : !user ? (
+            ) : user?.role === 'admin' ? (
+              <Link to="/admin/products" className="w-full flex items-center justify-center gap-2 bg-ink text-linen font-semibold py-4 rounded-xl transition hover:bg-espresso">
+                Kelola di Dashboard
+              </Link>
+            ) : (
               <div className="border border-parchment rounded-2xl p-4 bg-ivory text-center space-y-2">
                 <p className="text-sm text-espresso font-medium">Masuk untuk membeli produk ini</p>
                 <div className="flex gap-2 justify-center">
@@ -184,7 +188,7 @@ const ProductDetailPage = () => {
                   <Link to="/register" className="border border-parchment text-espresso text-sm font-medium px-5 py-2 rounded-xl transition hover:border-mahogany">Daftar</Link>
                 </div>
               </div>
-            ) : null}
+            )}
           </div>
         </div>
 

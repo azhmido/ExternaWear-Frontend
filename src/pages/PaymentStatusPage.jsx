@@ -38,6 +38,7 @@ const PaymentStatusPage = ({ type = 'success' }) => {
   useDocumentTitle(type === 'success' ? 'Pembayaran Berhasil' : 'Pembayaran Gagal');
 
   const fetchAttempt = useRef(0);
+  const timerRef = useRef(null);
 
   //polling status pesanan setelah redirect dari xendit
   //kalau type=success: polling 10x tiap 2 detik
@@ -74,15 +75,18 @@ const PaymentStatusPage = ({ type = 'success' }) => {
           setLoading(false);
           return;
         }
-        setTimeout(run, delay);
+        timerRef.current = setTimeout(run, delay);
       };
 
-      setTimeout(run, delay);
+      timerRef.current = setTimeout(run, delay);
     };
 
     poll();
     
-    return () => { cancelled = true; };
+    return () => { 
+      cancelled = true; 
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, [orderId, user, type]);
 
   if (loading) return (

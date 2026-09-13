@@ -245,6 +245,7 @@ const ProductsPage = () => {
                       <h3 className="font-display text-xl font-semibold text-ink leading-snug hover:text-mahogany transition">{product.name}</h3>
                     </Link>
                     <p className="text-caramel text-sm mt-1.5 line-clamp-2 flex-1">{product.description}</p>
+
                     <div className="flex items-center justify-between mt-4">
                       <p className="text-mahogany font-bold text-xl">Rp {Number(product.price).toLocaleString('id-ID')}</p>
                       <p className="text-xs text-caramel">{totalStock} tersisa</p>
@@ -262,7 +263,7 @@ const ProductsPage = () => {
                         <ShoppingCart size={15} /> Pilih & Tambah
                       </Link>
                     )}
-                    {!user && (
+                    {(!user || user?.role === 'admin') && (
                       <Link to={`/products/${product.id}`}
                         className="mt-4 w-full flex items-center justify-center text-sm text-mahogany hover:text-ink border border-parchment hover:border-mahogany py-2.5 rounded-xl transition">
                         Lihat Detail
