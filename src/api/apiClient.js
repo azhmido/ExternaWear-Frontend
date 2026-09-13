@@ -5,4 +5,29 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// Interceptor untuk menangani Cold Start (Server tertidur)
+// Otomatis mengulang (retry) request yang gagal maksimal 3 kali dengan jeda waktu.
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const config = error.config;
+    
+    // Jika tidak ada config atau retry sudah melebihi 3 kali, tolak (reject)
+    if (!config || (config._retryCount && config._retryCount >= 3)) {
+      return Promise.reject(error);
+    }
+    
+    // Tambah hitungan retry
+    config._retryCount = (config._retryCount || 0) + 1;
+    
+    // Berikan jeda waktu (backoff): 1 detik, 2 detik, 3 detik agar server sempat bangun
+    const backoff = new Promise((resolve) => {
+      setTimeout(() => resolve(), config._retryCount * 1000);
+    });
+    
+    await backoff;
+    return api(config);
+  }
+);
+
 export default api;

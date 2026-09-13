@@ -230,7 +230,14 @@ const ProductsPage = () => {
                   <Link to={`/products/${product.id}`} className="relative overflow-hidden h-60 bg-parchment/30 block">
                     <img src={product.image_url} alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      onError={(e) => { e.target.src = 'https://placehold.co/400x300/E8D9C8/6B3A2A?text=ExternaWear'; }} />
+                      onError={(e) => { 
+                        if (!e.target.dataset.retried) {
+                          e.target.dataset.retried = '1';
+                          setTimeout(() => { e.target.src = product.image_url + '?' + Date.now(); }, 1500);
+                        } else {
+                          e.target.src = 'https://placehold.co/400x300/E8D9C8/6B3A2A?text=ExternaWear'; 
+                        }
+                      }} />
                     <div className="absolute top-3 left-3">
                       <span className="bg-ink text-linen text-xs font-medium px-3 py-1.5 rounded-full">{product.category}</span>
                     </div>

@@ -101,7 +101,14 @@ const ProductDetailPage = () => {
                 src={product.image_url}
                 alt={product.name}
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-                onError={(e) => { e.target.src = 'https://placehold.co/600x600/E8D9C8/6B3A2A?text=ExternaWear'; }}
+                onError={(e) => { 
+                  if (!e.target.dataset.retried) {
+                    e.target.dataset.retried = '1';
+                    setTimeout(() => { e.target.src = product.image_url + '?' + Date.now(); }, 1500);
+                  } else {
+                    e.target.src = 'https://placehold.co/600x600/E8D9C8/6B3A2A?text=ExternaWear';
+                  }
+                }}
               />
             </div>
           </div>
@@ -264,7 +271,14 @@ const ProductDetailPage = () => {
                   <div className="h-40 overflow-hidden bg-parchment/20">
                     <img src={p.image_url} alt={p.name} loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      onError={(e) => { e.target.src = 'https://placehold.co/200x160/E8D9C8/6B3A2A?text=EW'; }} />
+                      onError={(e) => { 
+                        if (!e.target.dataset.retried) {
+                          e.target.dataset.retried = '1';
+                          setTimeout(() => { e.target.src = p.image_url + '?' + Date.now(); }, 1500);
+                        } else {
+                          e.target.src = 'https://placehold.co/200x160/E8D9C8/6B3A2A?text=EW';
+                        }
+                      }} />
                   </div>
                   <div className="p-3">
                     <p className="font-semibold text-ink text-sm truncate">{p.name}</p>
