@@ -18,6 +18,7 @@ export const AuthProvider = ({ children }) => {
     } catch {
       setUser(null);
       localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('ew_token');
       localStorage.removeItem('ew_cart');
       window.dispatchEvent(new Event('cart-clear'));
     } finally {
@@ -42,12 +43,16 @@ export const AuthProvider = ({ children }) => {
     const res = await api.post('/users/login', { username, password });
     setUser(res.data.user);
     localStorage.setItem('isLoggedIn', 'true');
+    if (res.data.token) {
+      localStorage.setItem('ew_token', res.data.token);
+    }
     return res.data.user;
   }, []);
 
   const logout = useCallback(async () => {
     setUser(null);
     localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('ew_token');
     localStorage.removeItem('ew_cart');
     window.dispatchEvent(new Event('cart-clear'));
     try {
