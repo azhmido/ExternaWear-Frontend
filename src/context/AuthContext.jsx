@@ -18,6 +18,8 @@ export const AuthProvider = ({ children }) => {
     } catch {
       setUser(null);
       localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('ew_cart');
+      window.dispatchEvent(new Event('cart-clear'));
     } finally {
       setLoading(false);
     }
@@ -46,6 +48,8 @@ export const AuthProvider = ({ children }) => {
   const logout = useCallback(async () => {
     setUser(null);
     localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('ew_cart');
+    window.dispatchEvent(new Event('cart-clear'));
     try {
       await api.post('/users/logout');
     } catch {

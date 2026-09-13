@@ -17,6 +17,12 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem('ew_cart', JSON.stringify(items));
   }, [items]);
 
+  useEffect(() => {
+    const handleClear = () => setItems([]);
+    window.addEventListener('cart-clear', handleClear);
+    return () => window.removeEventListener('cart-clear', handleClear);
+  }, []);
+
   const addToCart = useCallback((product, size, qty = 1) => {
     const variant = product.variants?.find(v => v.size === size);
     if (!variant || variant.stock === 0) {
